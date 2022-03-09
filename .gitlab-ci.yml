@@ -1,5 +1,5 @@
 # variables:
-#   - 
+#   
 #   - source .${CI_COMMIT_REF_NAME}.env
 #   - AppEcrUri=${AccountId}.dkr.ecr.${region}.amazonaws.com/saidatech-learn-{environment}:app-latest
 #   - NginxEcrUri=${AccountId}.dkr.ecr.${region}.amazonaws.com/saidatech-learn-{environment}:nginx-latest
