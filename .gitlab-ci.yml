@@ -1,0 +1,140 @@
+# variables:
+#   - 
+#   - source .${CI_COMMIT_REF_NAME}.env
+#   - AppEcrUri=${AccountId}.dkr.ecr.${region}.amazonaws.com/saidatech-learn-{environment}:app-latest
+#   - NginxEcrUri=${AccountId}.dkr.ecr.${region}.amazonaws.com/saidatech-learn-{environment}:nginx-latest
+#   - echo AppEcrUri=$AppEcrUri >> .${CI_COMMIT_REF_NAME}.env
+#   - echo NginxEcrUri=$NginxEcrUri >> .${CI_COMMIT_REF_NAME}.env
+
+
+stages:
+  - infra
+  - build
+
+infra:
+  stage: infra
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache python3 py3-pip
+    - pip3 install --upgrade pip
+    - pip3 install awscli
+    - echo $AWS_SECRET_ACCESS_KEY
+    - echo $AWS_ACCESS_KEY_ID
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region us-east-1
+    - rm -rf /var/cache/apk/*
+    - source .env
+
+    
+
+  script:
+    - echo GitHubRepo is $GitHubRepo
+    - aws cloudformation deploy
+        --template-file  aws-resources/stack/ec2.yaml
+        --stack-name webserver-stack
+        --no-fail-on-empty-change
+        --parameter-overrides 
+            TagKey=$TagKey
+            TagValue=$TagValue
+            EnvironmentType=$EnvironmentType
+            AmiID=$AmiID
+            KeyPairName=$KeyPairName
+            AvailabilityZone=$AvailabilityZone
+        --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+        --region us-east-1
+
+    - aws cloudformation deploy
+        --template-file  aws-resources/stack/devops.yaml
+        --stack-name AwsPipelineStack
+        --no-fail-on-empty-change
+        --parameter-overrides 
+            GitHubRepo=$GitHubRepo
+            GitHubBranch=$GitHubBranch
+            GitHubUser=$GitHubUser
+            DBInstanceClass=$DBInstanceClass
+            TagKey=$TagKey
+            TagValue=$TagValue
+        --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+        --region us-east-1
+  #   - aws cloudformation deploy 
+  #       --template-file aws/cloudformation/vpc.yaml
+  #       --stack-name ${CI_COMMIT_REF_NAME}-saida-vpc
+  #       --no-fail-on-empty-change
+  #       --parameter-overrides 
+  #           DBAllocatedStorage=$DBAllocatedStorage
+  #           region=$region
+  #           environment=$environment
+  #           DBInstanceClass=$DBInstanceClass
+  #           MultiAZ=$MultiAZ
+  #           CIDRBlockIP=$CIDRBlockIP
+  #           AvailabilityZone1=$AvailabilityZone1
+  #           AvailabilityZone2=$AvailabilityZone2
+  #           ELBIngressPort=$ELBIngressPort
+  #           ELBHttpIngressPort=$ELBHttpIngressPort
+  #           AppIngressPort=$AppIngressPort
+  #           DbInVpc=$DbInVpc
+  #           DBUser=${DBUser}
+  #           DBPassword=${DBPassword}
+  #       --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+  #       --region ${region}
+
+  #   - aws cloudformation deploy 
+  #       --template-file aws/cloudformation/s3ecs.yaml
+  #       --stack-name ${CI_COMMIT_REF_NAME}-saida-s3ecs
+  #       --no-fail-on-empty-change
+  #       --parameter-overrides
+  #           environment=$environment
+  #           region=$region
+  #       --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+  #       --region ${region}
+  environment: development
+
+# build:
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:19.03.12-dind
+#   before_script:
+#     - apk add --no-cache python3 py3-pip
+#     - pip3 install --upgrade pip
+#     - pip3 install awscli
+#     - rm -rf /var/cache/apk/*
+#     - source .env
+    
+#   build:
+#     - docker build -t $AppEcrUri -f application/docker/python/Dockerfile application/. 
+#     - docker build -t $NginxEcrUri -f application/docker/nginx/Dockerfile application/.
+#     - aws ecr get-login-password --region $region | docker login --username AWS --password-stdin ${AccountId}.dkr.ecr.${region}.amazonaws.com
+#     - docker push $AppEcrUri
+#     - docker push $NginxEcrUri
+#     - aws cloudformation deploy 
+#         --template-file aws/cloudformation/ecs-service.yaml
+#         --stack-name ${CI_COMMIT_REF_NAME}-saida-ecs2
+#         --no-fail-on-empty-change
+#         --parameter-overrides
+#             environment=$environment
+#             region=$region
+#             EcsCommonStackName=${CI_COMMIT_REF_NAME}-saida-s3ecs
+#             VpcStackName=${CI_COMMIT_REF_NAME}-saida-vpc
+#             DjangoAppContainerName=$DjangoAppContainerName
+#             DjangoAppServiceName=$DjangoAppServiceName
+#             DjangoTaskName=$DjangoTaskName
+#             EmailPort=$EmailPort
+#             SaidatechAdminEmail=$SaidatechAdminEmail
+#             UseS3=$UseS3
+#             Debug=$Debug
+#             DjangoEmailBackend=$DjangoEmailBackend
+#             EmailHost=$EmailHost
+#             UseLockdown=$UseLockdown
+#             NginxContainerName=$NginxContainerName
+#             NginxTaskName=$NginxTaskName
+#             AppContainerPort=$AppContainerPort
+#             AutoScalingTargetValue=$AutoScalingTargetValue
+#             EmailUseTls=$EmailUseTls
+#             SesFromEmail=$SesFromEmail
+#             DjangoAppSecret=$DjangoAppSecret
+#             NginxEcrUri=$NginxEcrUri
+#             AppEcrUri=$AppEcrUri
+#         --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+#         --region ${region}
