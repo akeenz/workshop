@@ -28,35 +28,35 @@ infra:
 
     
 
-  script:
-    - echo GitHubRepo is $GitHubRepo
-    - aws cloudformation deploy
-        --template-file  aws-resources/stack/ec2.yaml
-        --stack-name webserver-stack
-        --no-fail-on-empty-change
-        --parameter-overrides 
-            TagKey=$TagKey
-            TagValue=$TagValue
-            EnvironmentType=$EnvironmentType
-            AmiID=$AmiID
-            KeyPairName=$KeyPairName
-            AvailabilityZone=$AvailabilityZone
-        --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
-        --region us-east-1
+#   script:
+#     - echo GitHubRepo is $GitHubRepo
+#     - aws cloudformation deploy
+#         --template-file  aws-resources/stack/ec2.yaml
+#         --stack-name webserver-stack
+#         --no-fail-on-empty-change
+#         --parameter-overrides 
+#             TagKey=$TagKey
+#             TagValue=$TagValue
+#             EnvironmentType=$EnvironmentType
+#             AmiID=$AmiID
+#             KeyPairName=$KeyPairName
+#             AvailabilityZone=$AvailabilityZone
+#         --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+#         --region us-east-1
 
-    - aws cloudformation deploy
-        --template-file  aws-resources/stack/devops.yaml
-        --stack-name AwsPipelineStack
-        --no-fail-on-empty-change
-        --parameter-overrides 
-            GitHubRepo=$GitHubRepo
-            GitHubBranch=$GitHubBranch
-            GitHubUser=$GitHubUser
-            DBInstanceClass=$DBInstanceClass
-            TagKey=$TagKey
-            TagValue=$TagValue
-        --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
-        --region us-east-1
+#     - aws cloudformation deploy
+#         --template-file  aws-resources/stack/devops.yaml
+#         --stack-name AwsPipelineStack
+#         --no-fail-on-empty-change
+#         --parameter-overrides 
+#             GitHubRepo=$GitHubRepo
+#             GitHubBranch=$GitHubBranch
+#             GitHubUser=$GitHubUser
+#             DBInstanceClass=$DBInstanceClass
+#             TagKey=$TagKey
+#             TagValue=$TagValue
+#         --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+#         --region us-east-1
   #   - aws cloudformation deploy 
   #       --template-file aws/cloudformation/vpc.yaml
   #       --stack-name ${CI_COMMIT_REF_NAME}-saida-vpc
